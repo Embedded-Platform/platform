@@ -20,4 +20,6 @@ jobs:
     - name: Build docker image
       run: docker build -t platform .
     - name: Push to Dockerhub
-      run: docker push cristianortizheano/platform:latest
+      run: |
+        docker tag platform:latest cristianortizheano/platform:latest
+        docker push cristianortizheano/platform:latest
