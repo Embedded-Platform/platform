@@ -16,6 +16,6 @@ jobs:
     - name: Pull Docker image
       run: sudo docker pull cristianortizheano/platform:latest
     - name: Delete Old docker container
-      run: sudo docker rm -f cicd-pipeline-container || true
+      run: sudo docker rm -f platform-container || true
     - name: Run Docker Container
       run: sudo docker run -d -p 4200:4200 --name platform cristianortizheano/platform:latest
