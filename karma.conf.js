@@ -25,7 +25,7 @@ module.exports = function (config) {
       suppressAll: true // removes the duplicated traces
     },
     coverageReporter: {
-      dir: require('path').join(__dirname, './coverage/coreui-free-angular-admin-template'),
+      dir: require('path').join(__dirname, './coverage/embedded-platform'),
       subdir: '.',
       reporters: [
         { type: 'html' },
