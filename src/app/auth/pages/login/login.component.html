@@ -9,43 +9,97 @@
             <c-card-body>
               <form
                 cForm
-                [formGroup]="myForm"
+                [formGroup]="loginForm"
+                [validated]="submitted()"
                 (ngSubmit)="login()"
                 class="login100-form"
                 autocomplete="off"
               >
                 <h1>Login</h1>
                 <p class="text-body-secondary">Sign In to your account</p>
-                <c-input-group class="mb-3">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilUser"></svg>
-                  </span>
-                  <input
-                    formControlName="username"
-                    autoComplete="username"
-                    cFormControl
-                    placeholder="Username"
-                  />
-                </c-input-group>
-                <c-input-group class="mb-4">
-                  <span cInputGroupText>
-                    <svg cIcon name="cilLockLocked"></svg>
-                  </span>
-                  <input
-                    formControlName="password"
-                    autoComplete="current-password"
-                    cFormControl
-                    placeholder="Password"
-                    type="password"
-                  />
-                </c-input-group>
+                <div *ngIf="loginForm.controls['username'] as ctrl">
+                  <c-input-group class="mb-3">
+                    <span cInputGroupText>
+                      <svg cIcon name="cilUser"></svg>
+                    </span>
+                    <input
+                      [valid]="
+                        ctrl.touched && ctrl.valid
+                          ? true
+                          : (submitted() || ctrl.touched) && ctrl.invalid
+                          ? false
+                          : undefined
+                      "
+                      formControlName="username"
+                      autoComplete="username"
+                      cFormControl
+                      id="username"
+                      placeholder="Username"
+                      required
+                    />
+                    <c-form-feedback
+                      *ngIf="submitted() || ctrl.invalid"
+                      [valid]="!(submitted() || ctrl.invalid)"
+                    >
+                      <ng-container *ngIf="ctrl.errors as errors">
+                        <div *ngIf="errors?.['required']">
+                          Username is required
+                        </div>
+                        <div *ngIf="errors?.['minlength']">
+                          {{ formErrors().username.minLength }}
+                        </div>
+                        <div *ngIf="errors?.['pattern']">
+                          {{ formErrors().username.pattern }}
+                        </div>
+                      </ng-container>
+                    </c-form-feedback>
+                  </c-input-group>
+                </div>
+                <div *ngIf="loginForm.controls['password'] as ctrl">
+                  <c-input-group class="mb-3">
+                    <span cInputGroupText>
+                      <svg cIcon name="cilLockLocked"></svg>
+                    </span>
+                    <input
+                      [valid]="
+                        ctrl.touched && ctrl.valid
+                          ? true
+                          : (submitted() || ctrl.touched) && ctrl.invalid
+                          ? false
+                          : undefined
+                      "
+                      formControlName="password"
+                      autoComplete="new-password"
+                      cFormControl
+                      placeholder="Password"
+                      type="password"
+                      required
+                    />
+                    <c-form-feedback
+                      *ngIf="submitted() || ctrl.invalid"
+                      [valid]="!(submitted() || ctrl.invalid)"
+                    >
+                      <ng-container *ngIf="ctrl.errors as errors">
+                        <div *ngIf="errors?.['required']">
+                          Password is required
+                        </div>
+                        <div *ngIf="errors?.['minlength']">
+                          {{ formErrors().password.minLength }}
+                        </div>
+                        <div *ngIf="errors?.['pattern']">
+                          {{ formErrors().password.pattern }}
+                        </div>
+                      </ng-container>
+                    </c-form-feedback>
+                  </c-input-group>
+                </div>
                 <c-row>
                   <c-col xs="6">
                     <button
                       cButton
                       class="px-4"
                       color="primary"
-                      [disabled]="myForm.invalid"
+                      [disabled]="loginForm.pristine || loginForm.invalid"
                       type="submit"
                     >
                       Login
@@ -72,6 +126,7 @@
                   do eiusmod tempor incididunt ut labore et dolore magna aliqua.
                 </p>
                 <button
+                  (click)="redirectToRegister()"
                   [active]="true"
                   cButton
                   class="mt-3"

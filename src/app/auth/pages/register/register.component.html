@@ -5,76 +5,252 @@
     <c-row class="justify-content-center">
       <c-col lg="7" md="9" xl="6">
         <c-card class="mx-4">
-          <c-card-body class="p-4">
+          <c-card-body class="p-4 position-relative">
             <form
               cForm
-              [formGroup]="myForm"
+              [formGroup]="registerForm"
+              [validated]="submitted()"
               (ngSubmit)="register()"
               class="login100-form"
               autocomplete="off"
             >
               <h1>Register</h1>
               <p class="text-body-secondary">Create your account</p>
-              <c-input-group class="mb-3">
-                <span cInputGroupText>
-                  <svg cIcon name="cilUser"></svg>
-                </span>
-                <input
-                  formControlName="name"
-                  autoComplete="name"
-                  cFormControl
-                  placeholder="Name"
-                />
-              </c-input-group>
-              <c-input-group class="mb-3">
-                <span cInputGroupText>
-                  <svg cIcon name="cilUser"></svg>
-                </span>
-                <input
-                  formControlName="username"
-                  autoComplete="username"
-                  cFormControl
-                  placeholder="Username"
-                />
-              </c-input-group>
-              <c-input-group class="mb-3">
-                <span cInputGroupText>&#64;</span>
-                <input
-                  formControlName="email"
-                  autoComplete="email"
-                  cFormControl
-                  placeholder="Email"
-                />
-              </c-input-group>
-              <c-input-group class="mb-3">
-                <span cInputGroupText>
-                  <svg cIcon name="cilLockLocked"></svg>
-                </span>
-                <input
-                  formControlName="password"
-                  autoComplete="new-password"
-                  cFormControl
-                  placeholder="Password"
-                  type="password"
-                />
-              </c-input-group>
-              <c-input-group class="mb-4">
-                <span cInputGroupText>
-                  <svg cIcon name="cilLockLocked"></svg>
-                </span>
-                <input
-                  autoComplete="new-password"
-                  cFormControl
-                  placeholder="Repeat password"
-                  type="password"
-                />
-              </c-input-group>
+              <div *ngIf="registerForm.controls['name'] as ctrl">
+                <c-input-group class="mb-3">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilUser"></svg>
+                  </span>
+                  <input
+                    [autofocus]="true"
+                    [valid]="
+                      ctrl.touched && ctrl.valid
+                        ? true
+                        : (submitted() || ctrl.touched) && ctrl.invalid
+                        ? false
+                        : undefined
+                    "
+                    formControlName="name"
+                    autoComplete="name"
+                    cFormControl
+                    id="name"
+                    placeholder="Name"
+                    required
+                  />
+                  <c-form-feedback
+                    *ngIf="submitted || ctrl.invalid"
+                    [valid]="!(submitted || ctrl.invalid)"
+                  >
+                    <ng-container *ngIf="ctrl.errors as errors">
+                      <div *ngIf="errors?.['required']">Name is required</div>
+                    </ng-container>
+                  </c-form-feedback>
+                </c-input-group>
+              </div>
+
+              <div *ngIf="registerForm.controls['username'] as ctrl">
+                <c-input-group class="mb-3">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilUser"></svg>
+                  </span>
+                  <input
+                    [valid]="
+                      ctrl.touched && ctrl.valid
+                        ? true
+                        : (submitted() || ctrl.touched) && ctrl.invalid
+                        ? false
+                        : undefined
+                    "
+                    formControlName="username"
+                    autoComplete="username"
+                    cFormControl
+                    id="username"
+                    placeholder="Username"
+                    required
+                  />
+                  <c-form-feedback
+                    *ngIf="submitted() || ctrl.invalid"
+                    [valid]="!(submitted() || ctrl.invalid)"
+                  >
+                    <ng-container *ngIf="ctrl.errors as errors">
+                      <div *ngIf="errors?.['required']">
+                        Username is required
+                      </div>
+                      <div *ngIf="errors?.['minlength']">
+                        {{ formErrors().username.minLength }}
+                      </div>
+                      <div *ngIf="errors?.['pattern']">
+                        {{ formErrors().username.pattern }}
+                      </div>
+                    </ng-container>
+                  </c-form-feedback>
+                </c-input-group>
+              </div>
+
+              <div *ngIf="registerForm.controls['email'] as ctrl">
+                <c-input-group class="mb-3">
+                  <span cInputGroupText>&#64;</span>
+                  <input
+                    [valid]="
+                      ctrl.touched && ctrl.valid
+                        ? true
+                        : (submitted() || ctrl.touched) && ctrl.invalid
+                        ? false
+                        : undefined
+                    "
+                    formControlName="email"
+                    autoComplete="email"
+                    id="email"
+                    cFormControl
+                    placeholder="Email"
+                    type="email"
+                    required
+                  />
+                  <c-form-feedback
+                    *ngIf="submitted() || ctrl.invalid"
+                    [valid]="!(submitted() || ctrl.invalid)"
+                  >
+                    <ng-container *ngIf="ctrl.errors as errors">
+                      <div *ngIf="errors?.['required']">Email is required</div>
+                      <div *ngIf="errors?.['email']">
+                        {{ formErrors().email?.email }}
+                      </div>
+                    </ng-container>
+                  </c-form-feedback>
+                </c-input-group>
+              </div>
+
+              <div *ngIf="registerForm.controls['password'] as ctrl">
+                <c-input-group class="mb-3">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilLockLocked"></svg>
+                  </span>
+                  <input
+                    [valid]="
+                      ctrl.touched && ctrl.valid
+                        ? true
+                        : (submitted() || ctrl.touched) && ctrl.invalid
+                        ? false
+                        : undefined
+                    "
+                    formControlName="password"
+                    autoComplete="new-password"
+                    cFormControl
+                    placeholder="Password"
+                    type="password"
+                    required
+                  />
+                  <c-form-feedback
+                    *ngIf="submitted || ctrl.invalid"
+                    [valid]="!(submitted || ctrl.invalid)"
+                  >
+                    <ng-container *ngIf="ctrl.errors as errors">
+                      <div *ngIf="errors?.['required']">
+                        Password is required
+                      </div>
+                      <div *ngIf="errors?.['minlength']">
+                        {{ formErrors().password.minLength }}
+                      </div>
+                      <div *ngIf="errors?.['pattern']">
+                        {{ formErrors().password.pattern }}
+                      </div>
+                    </ng-container>
+                  </c-form-feedback>
+                </c-input-group>
+              </div>
+
+              <div *ngIf="registerForm.controls['confirmPassword'] as ctrl">
+                <c-input-group class="mb-4">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilLockLocked"></svg>
+                  </span>
+                  <input
+                    [valid]="
+                      ctrl.touched && ctrl.valid
+                        ? true
+                        : (submitted() || ctrl.touched) && ctrl.invalid
+                        ? false
+                        : undefined
+                    "
+                    formControlName="confirmPassword"
+                    id="confirmPassword"
+                    autoComplete="new-password"
+                    cFormControl
+                    placeholder="Repeat password"
+                    type="password"
+                    required
+                  />
+                  <c-form-feedback
+                    *ngIf="submitted || ctrl.invalid"
+                    [valid]="!(submitted || ctrl.invalid)"
+                  >
+                    <ng-container *ngIf="ctrl.errors as errors">
+                      <div *ngIf="errors?.['passwordMismatch']">
+                        {{ formErrors().confirmPassword.passwordMismatch }}
+                      </div>
+                      <div *ngIf="errors?.['required']">
+                        Confirmation is required
+                      </div>
+                    </ng-container>
+                  </c-form-feedback>
+                </c-input-group>
+              </div>
+
+              <div *ngIf="registerForm.controls['accept'] as ctrl">
+                <c-form-check>
+                  <input
+                    [valid]="
+                      ctrl.valid
+                        ? true
+                        : submitted() && ctrl.invalid
+                        ? false
+                        : undefined
+                    "
+                    cFormCheckInput
+                    formControlName="accept"
+                    id="accept"
+                    required
+                    type="checkbox"
+                  />
+                  <label cFormCheckLabel custom for="accept"
+                    >I accept the terms of use</label
+                  >
+                  <c-form-feedback
+                    *ngIf="submitted() && ctrl.invalid"
+                    [valid]="false"
+                  >
+                    <ng-container *ngIf="ctrl.errors as errors">
+                      <div *ngIf="errors?.['required']">
+                        You have to accept our Terms and Conditions
+                      </div>
+                    </ng-container>
+                  </c-form-feedback>
+                </c-form-check>
+              </div>
+
               <div class="d-grid">
-                <button cButton (disabled)="samePassword()" color="success">
+                <button
+                  [disabled]="registerForm.pristine || registerForm.invalid"
+                  cButton
+                  color="success"
+                  type="submit"
+                >
                   Create Account
                 </button>
               </div>
             </form>
+            <hr />
+            <div class="d-grid">
+              You have an acount?
+              <button
+                (click)="redirectToLogin()"
+                cButton
+                class="px-0"
+                color="secondary"
+              >
+                Sing In
+              </button>
+            </div>
           </c-card-body>
         </c-card>
       </c-col>

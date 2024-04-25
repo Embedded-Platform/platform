@@ -1,4 +1,5 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { NgStyle } from '@angular/common';
 import {
   FormBuilder,
@@ -21,9 +22,11 @@ import {
   InputGroupTextDirective,
   FormControlDirective,
   ButtonDirective,
+  FormFeedbackComponent,
 } from '@coreui/angular';
 
 import { AuthService } from '../../services/auth.service';
+import { ValidationFormsService } from '../../services/validation-forms.service';
 
 @Component({
   selector: 'app-login',
@@ -46,20 +49,46 @@ import { AuthService } from '../../services/auth.service';
     FormControlDirective,
     ButtonDirective,
     NgStyle,
+    CommonModule,
+    FormFeedbackComponent,
   ],
 })
 export class LoginComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private validationFormsService = inject(ValidationFormsService);
 
-  public myForm: FormGroup = this.fb.group({
-    username: ['', [Validators.required, Validators.minLength(6)]],
-    password: ['', [Validators.required, Validators.minLength(6)]],
+  public formErrors = signal(this.validationFormsService.errorMessages);
+  public _submitted = signal(false);
+
+  public submitted = computed(() => {
+    return this._submitted();
+  });
+
+  public loginForm: FormGroup = this.fb.group({
+    username: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(this.validationFormsService.formRules.usernameMin),
+        Validators.pattern(this.validationFormsService.formRules.nonEmpty),
+      ],
+    ],
+    password: [
+      '',
+      [
+        Validators.required,
+        Validators.minLength(this.validationFormsService.formRules.passwordMin),
+        Validators.pattern(
+          this.validationFormsService.formRules.passwordPattern
+        ),
+      ],
+    ],
   });
 
   login() {
-    const { email, password } = this.myForm.value;
+    const { email, password } = this.loginForm.value;
     this.authService.login(email, password).subscribe({
       next: () => this.router.navigateByUrl('/dashboard'),
       error: (message) => {
@@ -69,13 +98,7 @@ export class LoginComponent {
   }
 
   redirectToRegister() {
-    const { name, email, password } = this.myForm.value;
-    this.authService.register(name, email, password).subscribe({
-      next: () => this.router.navigateByUrl('/dashboard'),
-      error: (message) => {
-        console.error('Error', message, 'error');
-      },
-    });
+    this.router.navigateByUrl('/register');
   }
 
   constructor() {}
