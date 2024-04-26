@@ -21,8 +21,10 @@ export const routes: Routes = [
   {
     path: 'dashboard',
     canActivate: [PrivateGuard],
-    loadChildren: () =>
-      import('./dashboard/dashboard.module').then((m) => m.DashboardModule),
+    loadComponent: () =>
+      import('./dashboard/pages/dashboard.component').then(
+        (m) => m.ChangeDetectionComponent
+      ),
   },
   {
     path: '**',

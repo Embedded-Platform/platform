@@ -36,9 +36,9 @@ export class AuthService {
     return true;
   }
 
-  login(email: string, password: string): Observable<boolean> {
-    const url = `${this.baseUrl}/auth/login`;
-    const body = { email, password };
+  login(username: string, password: string): Observable<boolean> {
+    const url = `${this.baseUrl}/auth/log-in`;
+    const body = { username, password };
 
     return this.http.post<LoginResponse>(url, body).pipe(
       map(({ user, token }) => this.setAuthentication(user, token)),
@@ -46,9 +46,14 @@ export class AuthService {
     );
   }
 
-  register(name: string, email: string, password: string): Observable<boolean> {
-    const url = `${this.baseUrl}/auth/register`;
-    const body = { name, email, password };
+  register(
+    name: string,
+    email: string,
+    username: string,
+    password: string
+  ): Observable<boolean> {
+    const url = `${this.baseUrl}/auth/sign-up`;
+    const body = { name, email, username, password };
 
     return this.http.post<RegisterResponse>(url, body).pipe(
       map(({ user, token }) => this.setAuthentication(user, token)),

@@ -88,8 +88,8 @@ export class LoginComponent {
   });
 
   login() {
-    const { email, password } = this.loginForm.value;
-    this.authService.login(email, password).subscribe({
+    const { username, password } = this.loginForm.value;
+    this.authService.login(username, password).subscribe({
       next: () => this.router.navigateByUrl('/dashboard'),
       error: (message) => {
         console.error('Error', message, 'error');

@@ -117,10 +117,24 @@ export class RegisterComponent {
     { validators: [PasswordValidators.confirmPassword] }
   );
 
+  public samePassword = computed(() => {
+    const { password, confirmPassword } = this.registerForm.value;
+    if (password != confirmPassword) {
+      return false;
+    }
+    return true;
+  });
+
+  public isValidPassword = computed(() => {
+    return this.submitted()
+      ? !this.registerForm.controls['password'].invalid
+      : undefined;
+  });
+
   register() {
-    const { name, email, password } = this.registerForm.value;
+    const { name, email, username, password } = this.registerForm.value;
     this._submitted.set(true);
-    this.authService.register(name, email, password).subscribe({
+    this.authService.register(name, email, username, password).subscribe({
       next: () => this.router.navigateByUrl('/dashboard'),
       error: (message) => {
         console.error('Error', message, 'error');
