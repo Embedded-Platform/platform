@@ -137,7 +137,7 @@ export class RegisterComponent {
     this.authService.register(name, email, username, password).subscribe({
       next: () => this.router.navigateByUrl('/dashboard'),
       error: (message) => {
-        console.error('Error', message, 'error');
+        console.error('Error: ', message, 'error');
       },
     });
   }

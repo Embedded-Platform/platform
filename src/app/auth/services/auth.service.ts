@@ -28,11 +28,16 @@ export class AuthService {
     this.checkAuthStatus().subscribe();
   }
 
-  private setAuthentication(user: User, token: string): boolean {
+  private setAuthentication(user: User, jwt: string): boolean {
+    console.log({ user });
+
     this._currentUser.set(user);
     this._authStatus.set(AuthStatus.authenticated);
 
-    localStorage.setItem('token', token);
+    console.log(this.authStatus());
+
+    localStorage.setItem('jwt', jwt);
+
     return true;
   }
 
@@ -41,7 +46,7 @@ export class AuthService {
     const body = { username, password };
 
     return this.http.post<LoginResponse>(url, body).pipe(
-      map(({ user, token }) => this.setAuthentication(user, token)),
+      map(({ user, jwt }) => this.setAuthentication(user, jwt)),
       catchError((err) => throwError(() => err.error.message))
     );
   }
@@ -56,24 +61,26 @@ export class AuthService {
     const body = { name, email, username, password };
 
     return this.http.post<RegisterResponse>(url, body).pipe(
-      map(({ user, token }) => this.setAuthentication(user, token)),
+      map(({ user, jwt }) => this.setAuthentication(user, jwt)),
       catchError((err) => throwError(() => err.error.message))
     );
   }
 
   checkAuthStatus(): Observable<boolean> {
     const url = `${this.baseUrl}/auth/check-token`;
-    const token = localStorage.getItem('token');
 
-    if (!token) {
+    const jwt = localStorage.getItem('jwt');
+
+    if (!jwt) {
       this.logout();
       return of(false);
     }
 
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${jwt}`);
 
     return this.http.get<CheckTokenResponse>(url, { headers }).pipe(
-      map(({ user, token }) => this.setAuthentication(user, token)),
+      tap((x) => console.log(x)),
+      map(({ user, jwt }) => this.setAuthentication(user, jwt)),
       catchError(() => {
         this._authStatus.set(AuthStatus.notAuthenticated);
         return of(false);
