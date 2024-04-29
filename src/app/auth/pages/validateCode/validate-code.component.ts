@@ -1,19 +1,20 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NgStyle } from '@angular/common';
+import { IconDirective } from '@coreui/icons-angular';
 import {
   FormBuilder,
   FormGroup,
   Validators,
   ReactiveFormsModule,
+  AbstractControl,
+  ValidationErrors,
 } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IconDirective } from '@coreui/icons-angular';
+
 import {
   ContainerComponent,
   RowComponent,
   ColComponent,
-  CardGroupComponent,
   TextColorDirective,
   CardComponent,
   CardBodyComponent,
@@ -22,6 +23,9 @@ import {
   InputGroupTextDirective,
   FormControlDirective,
   ButtonDirective,
+  FormCheckComponent,
+  FormCheckInputDirective,
+  FormCheckLabelDirective,
   FormFeedbackComponent,
 } from '@coreui/angular';
 
@@ -29,8 +33,8 @@ import { AuthService } from '../../services/auth.service';
 import { ValidationFormsService } from '../../services/validation-forms.service';
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
+  selector: 'app-validate-code',
+  templateUrl: './validate-code.component.html',
   styles: [],
   standalone: true,
   imports: [
@@ -38,7 +42,6 @@ import { ValidationFormsService } from '../../services/validation-forms.service'
     ContainerComponent,
     RowComponent,
     ColComponent,
-    CardGroupComponent,
     TextColorDirective,
     CardComponent,
     CardBodyComponent,
@@ -48,68 +51,70 @@ import { ValidationFormsService } from '../../services/validation-forms.service'
     IconDirective,
     FormControlDirective,
     ButtonDirective,
-    NgStyle,
     CommonModule,
     FormFeedbackComponent,
+    FormCheckComponent,
+    FormCheckInputDirective,
+    FormCheckLabelDirective,
   ],
 })
-export class LoginComponent {
+export class ValidateCodeComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
   private validationFormsService = inject(ValidationFormsService);
 
   public formErrors = signal(this.validationFormsService.errorMessages);
+
   public submitted = signal(false);
 
-  public loginForm: FormGroup = this.fb.group({
-    username: [
+  public validateCodeForm: FormGroup = this.fb.group({
+    code: [
       '',
       [
         Validators.required,
-        Validators.minLength(this.validationFormsService.formRules.usernameMin),
-        Validators.pattern(this.validationFormsService.formRules.nonEmpty),
-      ],
-    ],
-    password: [
-      '',
-      [
-        Validators.required,
-        Validators.minLength(this.validationFormsService.formRules.passwordMin),
-        Validators.pattern(
-          this.validationFormsService.formRules.passwordPattern
-        ),
+        Validators.pattern(this.validationFormsService.formRules.codePattern),
       ],
     ],
   });
 
-  async login() {
-    const { username, password } = this.loginForm.value;
-
-    sessionStorage.setItem('username', username);
+  async validate() {
+    const { code } = this.validateCodeForm.value;
 
     this.submitted.set(true);
-    const nextStep: any = await this.authService.handleSignIn({
-      username,
-      password,
-    });
 
-    if (nextStep?.name) {
-      alert('Incorrect username or password.');
-    }
+    const username = sessionStorage.getItem('username');
 
-    if (nextStep?.signInStep === 'DONE') {
+    const confirmation = {
+      username: username ?? '',
+      confirmationCode: code.toString() ?? '',
+    };
+
+    const nextStep: any = await this.authService.handleSignUpConfirmation(
+      confirmation
+    );
+
+    if (nextStep?.signUpStep === 'COMPLETE_AUTO_SIGN_IN') {
+      const isSignedIn: any = await this.authService.handleAutoSignIn();
+
+      this.assingUserValues(isSignedIn);
+
       this.authService.checkAuthStatus();
     }
   }
+  async assingUserValues(isSignedIn: any) {
+    const { username, userId } =
+      await this.authService.currentAuthenticatedUser();
 
-  redirectToRegister() {
-    this.router.navigateByUrl('/register');
+    console.log({ username, userId });
+
+    sessionStorage.setItem('username', username);
+    sessionStorage.setItem('userId', userId);
+
+    this.router.navigateByUrl('/dashboard');
   }
 
-  logOut() {
-    this.authService.handleSignOut();
+  redirectToLogin() {
+    this.router.navigateByUrl('/login');
   }
-
-  constructor() {}
 }

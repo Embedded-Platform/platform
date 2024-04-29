@@ -19,6 +19,14 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'validate-code',
+    canActivate: [PublicGuard],
+    loadComponent: () =>
+      import('./auth/pages/validateCode/validate-code.component').then(
+        (m) => m.ValidateCodeComponent
+      ),
+  },
+  {
     path: 'dashboard',
     canActivate: [PrivateGuard],
     loadComponent: () =>

@@ -11,9 +11,7 @@ export const PrivateGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
-  router.navigateByUrl('/login');
+  return router.createUrlTree(['/login']);
   // const url = state.url;
   // localStorage.setItem('url', url); para devolver al usuariuo a donde queria ir
-
-  return false;
 };

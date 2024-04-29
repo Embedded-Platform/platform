@@ -1,0 +1,20 @@
+{
+  "devtwo": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-platform-devtwo-7a124-authRole",
+      "UnauthRoleArn": "arn:aws:iam::157335975177:role/amplify-platform-devtwo-7a124-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::157335975177:role/amplify-platform-devtwo-7a124-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-platform-devtwo-7a124-deployment",
+      "UnauthRoleName": "amplify-platform-devtwo-7a124-unauthRole",
+      "StackName": "amplify-platform-devtwo-7a124",
+      "StackId": "arn:aws:cloudformation:us-east-2:157335975177:stack/amplify-platform-devtwo-7a124/63348c20-0552-11ef-a459-0a94e6023461",
+      "AmplifyAppId": "d282ftzomgwj0e"
+    },
+    "categories": {
+      "auth": {
+        "platform18f16fda": {}
+      }
+    }
+  }
+}

@@ -1,22 +1,28 @@
-import { environments } from '../../../environments/environments';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, map, of, tap, throwError } from 'rxjs';
-import {
-  CheckTokenResponse,
-  LoginResponse,
-  RegisterResponse,
-  User,
-} from '../interfaces';
+import { Injectable, computed, signal } from '@angular/core';
+import { Observable, of } from 'rxjs';
+import { User } from '../interfaces';
 import { AuthStatus } from '../enums/auth-status.enum';
+
+import {
+  signUp,
+  confirmSignUp,
+  type ConfirmSignUpInput,
+  autoSignIn,
+  signIn,
+  type SignInInput,
+  signOut,
+  getCurrentUser,
+  fetchAuthSession,
+  JWT,
+  fetchUserAttributes,
+} from 'aws-amplify/auth';
+
+import { SignUpParameters } from '../interfaces/sign-up-parameters';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly baseUrl = environments.baseUrl;
-  private http = inject(HttpClient);
-
   private _currentUser = signal<User | null>(null);
   private _authStatus = signal<AuthStatus>(AuthStatus.checking);
 
@@ -25,72 +31,130 @@ export class AuthService {
   public authStatus = computed(() => this._authStatus());
 
   constructor() {
-    this.checkAuthStatus().subscribe();
+    this.checkAuthStatus();
   }
 
-  private setAuthentication(user: User, jwt: string): boolean {
-    console.log({ user });
-
+  private setAuthentication(user: User): boolean {
     this._currentUser.set(user);
     this._authStatus.set(AuthStatus.authenticated);
-
-    console.log(this.authStatus());
-
-    localStorage.setItem('jwt', jwt);
 
     return true;
   }
 
-  login(username: string, password: string): Observable<boolean> {
-    const url = `${this.baseUrl}/auth/log-in`;
-    const body = { username, password };
+  async handleSignUp({
+    name,
+    username,
+    email,
+    password,
+  }: SignUpParameters): Promise<any> {
+    try {
+      const { /*isSignUpComplete,*/ userId, nextStep } = await signUp({
+        username,
+        password,
+        options: {
+          userAttributes: {
+            name, //
+            email, // E.164 number convention
+          },
+          // optional
+          autoSignIn: true, // or SignInOptions e.g { authFlowType: "USER_SRP_AUTH" }
+        },
+      });
 
-    return this.http.post<LoginResponse>(url, body).pipe(
-      map(({ user, jwt }) => this.setAuthentication(user, jwt)),
-      catchError((err) => throwError(() => err.error.message))
-    );
+      console.log(userId);
+      return nextStep;
+    } catch (error) {
+      return error;
+    }
   }
 
-  register(
-    name: string,
-    email: string,
-    username: string,
-    password: string
-  ): Observable<boolean> {
-    const url = `${this.baseUrl}/auth/sign-up`;
-    const body = { name, email, username, password };
-
-    return this.http.post<RegisterResponse>(url, body).pipe(
-      map(({ user, jwt }) => this.setAuthentication(user, jwt)),
-      catchError((err) => throwError(() => err.error.message))
-    );
+  async handleSignUpConfirmation({
+    username,
+    confirmationCode,
+  }: ConfirmSignUpInput) {
+    try {
+      const { /*isSignUpComplete,*/ nextStep } = await confirmSignUp({
+        username,
+        confirmationCode,
+      });
+      return nextStep;
+    } catch (error) {
+      return error;
+    }
   }
 
-  checkAuthStatus(): Observable<boolean> {
-    const url = `${this.baseUrl}/auth/check-token`;
+  async handleAutoSignIn() {
+    try {
+      const signInOutput = await autoSignIn();
 
-    const jwt = localStorage.getItem('jwt');
+      return signInOutput;
+    } catch (error) {
+      return error;
+    }
+  }
 
-    if (!jwt) {
-      this.logout();
+  async handleSignIn({ username, password }: SignInInput) {
+    try {
+      const { /*isSignedIn,*/ nextStep } = await signIn({ username, password });
+      return nextStep;
+    } catch (error) {
+      return error;
+    }
+  }
+
+  async handleSignOut() {
+    try {
+      await signOut();
+      console.log('out');
+    } catch (error) {}
+  }
+
+  async currentAuthenticatedUser(): Promise<{
+    username: string;
+    userId: string;
+  }> {
+    try {
+      const { username, userId /*, signInDetails*/ } = await getCurrentUser();
+
+      const userInfo = {
+        username,
+        userId,
+      };
+
+      return userInfo;
+    } catch (error) {
+      return {} as any;
+    }
+  }
+
+  async currentSession(): Promise<JWT> {
+    try {
+      const { /* accessToken,*/ idToken } =
+        (await fetchAuthSession()).tokens ?? {};
+      return idToken as JWT;
+    } catch (error) {
+      return {} as any;
+    }
+  }
+
+  async checkAuthStatus(): Promise<Observable<boolean>> {
+    try {
+      const currentUser = await getCurrentUser();
+
+      const user: User = {
+        id: currentUser.userId,
+        name: '',
+        username: currentUser.username,
+        email: '',
+      };
+
+      this.setAuthentication(user);
+
+      return of(true);
+    } catch (error) {
+      this._authStatus.set(AuthStatus.notAuthenticated);
+
       return of(false);
     }
-
-    const headers = new HttpHeaders().set('Authorization', `Bearer ${jwt}`);
-
-    return this.http.get<CheckTokenResponse>(url, { headers }).pipe(
-      tap((x) => console.log(x)),
-      map(({ user, jwt }) => this.setAuthentication(user, jwt)),
-      catchError(() => {
-        this._authStatus.set(AuthStatus.notAuthenticated);
-        return of(false);
-      })
-    );
-  }
-
-  logout() {
-    localStorage.clear();
-    this._currentUser.set(null);
-    this._authStatus.set(AuthStatus.notAuthenticated);
   }
 }

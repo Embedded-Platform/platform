@@ -31,6 +31,7 @@ import {
 
 import { AuthService } from '../../services/auth.service';
 import { ValidationFormsService } from '../../services/validation-forms.service';
+import { SignUpParameters } from '../../interfaces/sign-up-parameters';
 
 /** passwords must match - custom validator */
 export class PasswordValidators {
@@ -79,15 +80,17 @@ export class RegisterComponent {
   private validationFormsService = inject(ValidationFormsService);
 
   public formErrors = signal(this.validationFormsService.errorMessages);
-  public _submitted = signal(false);
-
-  public submitted = computed(() => {
-    return this._submitted();
-  });
+  public submitted = signal(false);
 
   public registerForm: FormGroup = this.fb.group(
     {
-      name: ['', [Validators.required]],
+      name: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(this.validationFormsService.formRules.nameMin),
+        ],
+      ],
       username: [
         '',
         [
@@ -98,7 +101,15 @@ export class RegisterComponent {
           Validators.pattern(this.validationFormsService.formRules.nonEmpty),
         ],
       ],
-      email: ['', [Validators.required, Validators.email]],
+      email: [
+        '',
+        [
+          Validators.required,
+          Validators.pattern(
+            this.validationFormsService.formRules.emailPattern
+          ),
+        ],
+      ],
       password: [
         '',
         [
@@ -125,24 +136,31 @@ export class RegisterComponent {
     return true;
   });
 
-  public isValidPassword = computed(() => {
-    return this.submitted()
-      ? !this.registerForm.controls['password'].invalid
-      : undefined;
-  });
+  async register() {
+    const { name, username, email, password } = this.registerForm.value;
 
-  register() {
-    const { name, email, username, password } = this.registerForm.value;
-    this._submitted.set(true);
-    this.authService.register(name, email, username, password).subscribe({
-      next: () => this.router.navigateByUrl('/dashboard'),
-      error: (message) => {
-        console.error('Error: ', message, 'error');
-      },
+    sessionStorage.setItem('username', username);
+
+    this.submitted.set(true);
+    const nextStep: any = await this.authService.handleSignUp({
+      name,
+      username,
+      email,
+      password,
     });
+
+    if (nextStep?.name) {
+      alert('Username in use.');
+    }
+
+    if (nextStep?.signUpStep === 'CONFIRM_SIGN_UP')
+      this.router.navigateByUrl('/validate-code');
   }
 
   redirectToLogin() {
     this.router.navigateByUrl('/login');
   }
 }
+
+// error signing up: UsernameExistsException: User already exists
+//     at

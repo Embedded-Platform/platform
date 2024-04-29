@@ -7,10 +7,13 @@ export class ValidationFormsService {
   errorMessages: any;
 
   formRules = {
-    nonEmpty: '^[a-zA-Z0-9]+([_ -]?[a-zA-Z0-9])*$',
-    usernameMin: 5,
-    passwordMin: 6,
-    passwordPattern: '(?=.*\\d)(?=.*[a-z])(?=.*[A-Z]).{6,}',
+    nonEmpty: /^[a-zA-Z0-9]+([_ -]?[a-zA-Z0-9])*$/,
+    nameMin: 6,
+    usernameMin: 6,
+    passwordMin: 8,
+    passwordPattern: /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,}$/,
+    emailPattern: /^([a-zA-Z0-9._%-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6})*$/,
+    codePattern: /^\d{6}$/,
   };
 
   formErrors = {
@@ -26,6 +29,7 @@ export class ValidationFormsService {
     this.errorMessages = {
       name: {
         required: 'Name is required',
+        minLength: `Name must be ${this.formRules.nameMin} characters or more`,
       },
       username: {
         required: 'Username is required',
@@ -34,7 +38,7 @@ export class ValidationFormsService {
       },
       email: {
         required: 'required',
-        email: 'Invalid email address',
+        pattern: 'Invalid email address',
       },
       password: {
         required: 'Password is required',
@@ -48,6 +52,10 @@ export class ValidationFormsService {
       },
       accept: {
         requiredTrue: 'You have to accept our Terms and Conditions',
+      },
+      code: {
+        required: 'Confirmation code is required',
+        pattern: 'Confirmation code have 6 digits',
       },
     };
   }

@@ -1,0 +1,74 @@
+<div
+  class="bg-light dark:bg-transparent min-vh-100 d-flex flex-row align-items-center"
+>
+  <c-container>
+    <c-row class="justify-content-center">
+      <c-col lg="7" md="9" xl="6">
+        <c-card class="mx-4">
+          <c-card-body class="p-4 position-relative">
+            <form
+              cForm
+              [formGroup]="validateCodeForm"
+              [validated]="submitted()"
+              (ngSubmit)="validate()"
+              class="login100-form"
+              autocomplete="off"
+            >
+              <h1>Validation</h1>
+              <p class="text-body-secondary">Put your verification code</p>
+              <div *ngIf="validateCodeForm.controls['code'] as ctrl">
+                <c-input-group class="mb-3">
+                  <span cInputGroupText>
+                    <svg cIcon name="cilUser"></svg>
+                  </span>
+                  <input
+                    [autofocus]="true"
+                    [valid]="
+                      ctrl.touched && ctrl.valid
+                        ? true
+                        : (submitted() || ctrl.touched) && ctrl.invalid
+                        ? false
+                        : undefined
+                    "
+                    formControlName="code"
+                    autoComplete="code"
+                    cFormControl
+                    id="code"
+                    placeholder="123456"
+                    required
+                  />
+                  <c-form-feedback
+                    *ngIf="submitted || ctrl.invalid"
+                    [valid]="!(submitted || ctrl.invalid)"
+                  >
+                    <ng-container *ngIf="ctrl.errors as errors">
+                      <div *ngIf="errors?.['required']">
+                        {{ formErrors().code.required }}
+                      </div>
+                      <div *ngIf="errors?.['pattern']">
+                        {{ formErrors().code.pattern }}
+                      </div>
+                    </ng-container>
+                  </c-form-feedback>
+                </c-input-group>
+              </div>
+
+              <div class="d-grid">
+                <button
+                  [disabled]="
+                    validateCodeForm.pristine || validateCodeForm.invalid
+                  "
+                  cButton
+                  color="success"
+                  type="submit"
+                >
+                  Validate code
+                </button>
+              </div>
+            </form>
+          </c-card-body>
+        </c-card>
+      </c-col>
+    </c-row>
+  </c-container>
+</div>

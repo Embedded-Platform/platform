@@ -42,7 +42,12 @@
                     [valid]="!(submitted || ctrl.invalid)"
                   >
                     <ng-container *ngIf="ctrl.errors as errors">
-                      <div *ngIf="errors?.['required']">Name is required</div>
+                      <div *ngIf="errors?.['required']">
+                        {{ formErrors().name.required }}
+                      </div>
+                      <div *ngIf="errors?.['minlength']">
+                        {{ formErrors().username.minLength }}
+                      </div>
                     </ng-container>
                   </c-form-feedback>
                 </c-input-group>
@@ -74,7 +79,7 @@
                   >
                     <ng-container *ngIf="ctrl.errors as errors">
                       <div *ngIf="errors?.['required']">
-                        Username is required
+                        {{ formErrors().username.required }}
                       </div>
                       <div *ngIf="errors?.['minlength']">
                         {{ formErrors().username.minLength }}
@@ -111,9 +116,11 @@
                     [valid]="!(submitted() || ctrl.invalid)"
                   >
                     <ng-container *ngIf="ctrl.errors as errors">
-                      <div *ngIf="errors?.['required']">Email is required</div>
-                      <div *ngIf="errors?.['email']">
-                        {{ formErrors().email?.email }}
+                      <div *ngIf="errors?.['required']">
+                        {{ formErrors().email.required }}
+                      </div>
+                      <div *ngIf="errors?.['pattern']">
+                        {{ formErrors().email.pattern }}
                       </div>
                     </ng-container>
                   </c-form-feedback>
@@ -146,7 +153,7 @@
                   >
                     <ng-container *ngIf="ctrl.errors as errors">
                       <div *ngIf="errors?.['required']">
-                        Password is required
+                        {{ formErrors().password.required }}
                       </div>
                       <div *ngIf="errors?.['minlength']">
                         {{ formErrors().password.minLength }}
@@ -189,7 +196,7 @@
                         {{ formErrors().confirmPassword.passwordMismatch }}
                       </div>
                       <div *ngIf="errors?.['required']">
-                        Confirmation is required
+                        {{ formErrors().confirmPassword.required }}
                       </div>
                     </ng-container>
                   </c-form-feedback>
@@ -221,7 +228,7 @@
                   >
                     <ng-container *ngIf="ctrl.errors as errors">
                       <div *ngIf="errors?.['required']">
-                        You have to accept our Terms and Conditions
+                        {{ formErrors().accept.required }}
                       </div>
                     </ng-container>
                   </c-form-feedback>
