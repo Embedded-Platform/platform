@@ -1,0 +1,46 @@
+import { UUID } from './commons.interface';
+
+export interface Device {
+  id?: UUID;
+  name: String;
+  groupName: string;
+  description?: string | null;
+  groupEntity: Group;
+}
+
+export interface Group {
+  id?: UUID;
+  name: string;
+  description?: string | null;
+  projectEntity: Project;
+}
+
+export interface Project {
+  id?: UUID;
+  name: string;
+  description?: string | null;
+}
+
+export interface GroupRequest {
+  name: string;
+  description?: string | null;
+  projectId: UUID;
+}
+
+export interface DeviceRequest {
+  name: string;
+  description?: string | null;
+  groupId: UUID;
+  projectId: UUID;
+}
+
+export interface FirmwareVersionInformation {
+  versions: {
+    versionId: string;
+    lastModified: Date;
+    filesize: number;
+    latest: boolean;
+  }[];
+  prefix: string;
+  maxKeys: number;
+}

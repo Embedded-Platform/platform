@@ -1,0 +1,99 @@
+<div class="content">
+  <form class="node-selector container" [formGroup]="nodeForm">
+    <div class="row justify-content-md-center">
+      <div class="col-9 d-flex justify-content-center align-items-center">
+        <select-option class="select-project" [options]="projectOptions" placeholder="Seleccion un proyecto"
+          formControlName="project"></select-option>
+        <i class="new-project-button bi bi-box-seam" data-toggle="toogle" data-placement="top" title="Nuevo proyecto"
+          (click)="openProjectForm()"></i>
+      </div>
+
+    </div>
+    @if(this.nodeForm.get('project')?.value) {
+      <div class="group-filter container my-3">
+        <form [formGroup]="groupFilterForm" class="row justify-content-center align-items-center g-2">
+          <div class="col-md-3">
+        <input type="text" class="form-control" placeholder="ID del grupo" formControlName="id">
+          </div>
+          <div class="col-md-3">
+        <input type="text" class="form-control" placeholder="Nombre del grupo" formControlName="name">
+          </div>
+          <div class="col-md-auto d-flex align-items-center">
+        <button type="button" class="btn btn-primary ms-2" (click)="applyGroupFilter()">Filtrar</button>
+        <button type="button" class="btn btn-success ms-2" (click)="openGroupForm()">Agregar Grupo</button>
+          </div>
+          <!-- Espacio entre filtros y los otros botones -->
+          <div class="w-100 my-2"></div>
+          <div class="col-md-auto d-flex justify-content-center gap-2 mt-2 mt-md-0">
+        <button type="button" class="btn btn-secondary" (click)="openFirmwareUpdate()">
+          <i class="bi bi-upload me-1"></i> Cargar programa
+        </button>
+
+          </div>
+        </form>
+      </div>
+
+    <div class="nodes container">
+      <div class="row">
+        @for (group of groups; track $index) {
+        <div [class.selected-node]="group.id == this.nodeForm.get('group')?.value" class="node row m-3"
+          (click)="selectGroup($event, group.id!)">
+          <div class="col-10 d-flex flex-column justify-content-center">
+            <span class="group-name mb-1">{{group.name}}</span>
+            <span class="group-id mb-2">ID: {{group.id}}</span>
+          </div>
+
+          @if (
+            group.id == this.nodeForm.get('group')?.value
+            && devices.length > 0
+          ) {
+          <div class="device-list row">
+            <!-- Tarjeta extra para añadir dispositivo -->
+            <div class="device col-4 m-2 d-flex align-items-center justify-content-center add-device-card"
+              (click)="openDeviceForm()"
+              style="cursor:pointer; border: 2px dashed #0d6efd; min-height: 40px;">
+              <div class="w-100 text-center text-primary">
+                <i class="bi bi-plus-circle" style="font-size: 2rem;"></i>
+                <div>Añadir dispositivo</div>
+              </div>
+            </div>
+            @for (device of devices; track $index) {
+            <div [class.selected-node]="device.id == this.nodeForm.get('device')?.value" class="device col-4 m-2"
+              (click)="selectDevice(device.id!)">
+              <div>
+                <h5 class="mb-1">{{device.name}}</h5>
+                <small class="text-muted">ID: {{device.id}}</small>
+              </div>
+            </div>
+            }
+
+          </div>
+          }
+          @if (
+            group.id == this.nodeForm.get('group')?.value
+            && (!devices || devices.length === 0)
+          ) {
+          <div class="col">
+            <h4 class="mt-2 mb-3">No existen dispositivos en este grupo</h4>
+            <!-- Tarjeta extra para añadir dispositivo cuando no hay dispositivos -->
+            <div class="device col-4 m-2 d-flex align-items-center justify-content-center add-device-card"
+              (click)="openDeviceForm()"
+              style="cursor:pointer; border: 2px dashed #0d6efd; min-height: 90px;">
+              <div class="w-100 text-center text-primary">
+                <i class="bi bi-plus-circle" style="font-size: 2rem;"></i>
+                <div>Añadir dispositivo</div>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+        } @empty {
+        <h1>No existen grupos en este proyecto</h1>
+        }
+      </div>
+    </div>
+
+    }
+  </form>
+  <div class="file"></div>
+</div>
