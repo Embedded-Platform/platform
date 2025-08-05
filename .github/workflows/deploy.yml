@@ -1,0 +1,70 @@
+name: Deploy Angular App to EC2 with NGINX
+
+on:
+  push:
+    branches: [ platform ]  # O la rama que uses
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Build Angular app
+      run: npm run build --configuration=production
+
+    - name: Copy files to EC2
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        source: "dist/**"
+        target: "/home/${{ secrets.EC2_USER }}/angular-app"
+
+    - name: Configure NGINX on EC2
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        script: |
+          # Instalar NGINX si no está
+          if ! command -v nginx > /dev/null; then
+            sudo apt update
+            sudo apt install -y nginx
+          fi
+
+          # Crear directorio si no existe
+          sudo mkdir -p /var/www/angular-app
+          sudo cp -r /home/${{ secrets.EC2_USER }}/angular-app/dist/* /var/www/angular-app
+
+          # Crear archivo de configuración para Angular
+          cat <<EOF | sudo tee /etc/nginx/sites-available/angular-app
+          server {
+              listen 80;
+              server_name _;
+
+              root /var/www/angular-app;
+              index index.html;
+
+              location / {
+                  try_files \$uri \$uri/ /index.html;
+              }
+          }
+          EOF
+
+          # Activar configuración y reiniciar nginx
+          sudo ln -sf /etc/nginx/sites-available/angular-app /etc/nginx/sites-enabled/angular-app
+          sudo rm -f /etc/nginx/sites-enabled/default
+          sudo nginx -t && sudo systemctl restart nginx
