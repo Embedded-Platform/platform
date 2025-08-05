@@ -55,7 +55,7 @@ jobs:
               listen 80;
               server_name _;
 
-              root /var/www/angular-app;
+              root /var/www/angular-app/platform/browser;
               index index.html;
 
               location / {
