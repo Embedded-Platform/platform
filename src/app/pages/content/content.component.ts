@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import { CustomValidator } from '../../utils/validators/custom.validator';
 import { IotService } from '../../services/iot/iot.service';
-import { Device, FirmwareVersionInformation, Group, Project } from '../../interfaces/iot.interface';
+import { Device, FirmwareVersion, Group, Project } from '../../interfaces/iot.interface';
 import { GenericHash, UUID } from '../../interfaces/commons.interface';
 import { SelectComponent } from '../../tools/select/select.component';
 import { ProjectFormComponent } from '../../tools/project-form/project-form.component';
@@ -33,7 +33,7 @@ export class ContentComponent {
   allGroups: Group[] = [];
   groups: Group[] = [];
   devices: Device[] = [];
-  versions: FirmwareVersionInformation | undefined;
+  versions: FirmwareVersion | undefined;
 
 
   constructor() {
@@ -171,7 +171,7 @@ export class ContentComponent {
 
   openFirmwareUpdate() {
     const modalRef = this.modalService.open(FirmwareUpdateComponent);
-   
+
 
     modalRef.result.then((result) => {
       if (result) {

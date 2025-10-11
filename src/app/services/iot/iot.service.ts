@@ -1,5 +1,5 @@
 import { inject, Injectable } from "@angular/core";
-import { Device, DeviceRequest, FirmwareVersionInformation, Group, GroupRequest, Project} from "../../interfaces/iot.interface";
+import { Device, DeviceRequest, FirmwareVersion, Group, GroupRequest, Project} from "../../interfaces/iot.interface";
 import { RestClientService } from "../rest-client.service";
 import { RestCacheConfig, UUID } from "../../interfaces/commons.interface";
 import { switchMap, tap } from "rxjs";
@@ -76,7 +76,11 @@ export class IotService {
   }
 
   getFirmwareVersions(projectId: UUID, groupId: UUID){
-    return this.http.get<FirmwareVersionInformation>(`/platform/project/${projectId}/group/${groupId}/firmware/versions`);
+    return this.http.get<FirmwareVersion>(`/platform/project/${projectId}/group/${groupId}/firmware/versions`);
+  }
+
+  getFirmwareDeviceVersions(projectId: UUID, groupId: UUID, deviceId: UUID){
+    return this.http.get<FirmwareVersion>(`/platform/project/${projectId}/group/${groupId}/device/${deviceId}/firmware/versions`);
   }
 
 }

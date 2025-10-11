@@ -34,7 +34,7 @@ export interface DeviceRequest {
   projectId: UUID;
 }
 
-export interface FirmwareVersionInformation {
+export interface FirmwareVersion {
   versions: {
     versionId: string;
     lastModified: Date;
