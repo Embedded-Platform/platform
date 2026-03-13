@@ -4,14 +4,22 @@
   height: 100vh;
 }
 
-.header
-{
+.header {
   background-color: color(primary);
   color: #ffffff;
-  padding: 10px;
-  text-align: center;
-  font-size: 2em;
-  font-weight: bold;
+  padding: 0.75rem 2rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  border-bottom: 2px solid rgba(255,255,255,0.05);
+
+  .brand-text {
+    letter-spacing: -0.5px;
+    font-family: 'Inter', sans-serif; // O la tipografía que estés usando
+  }
+
+  i.bi-person-circle {
+    font-size: 1.1rem;
+    vertical-align: middle;
+  }
 }
 .menu{
   height: 100%;

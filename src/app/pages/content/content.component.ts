@@ -1,4 +1,5 @@
 import { Component, inject } from '@angular/core';
+import { environment } from '../../../environments/environment';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from '@angular/forms';
 import { CustomValidator } from '../../utils/validators/custom.validator';
 import { IotService } from '../../services/iot/iot.service';
@@ -10,17 +11,16 @@ import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { GroupFormComponent } from '../../tools/group-form/group-form.component';
 import { DeviceFormComponent } from '../../tools/device-form/device-form.component';
 import { FirmwareUpdateComponent } from '../../tools/firmware-update/firmware-update.component';
+import { DeviceHistoryComponent } from '../../tools/device-history/device-history.component';
+import { CollaboratorFormComponent } from '../../tools/collaborator-form/collaborator-form.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-content',
   imports: [
     FormsModule,
     ReactiveFormsModule,
-    SelectComponent,
-    ProjectFormComponent,
-    GroupFormComponent,
-    DeviceFormComponent,
-    FirmwareUpdateComponent
+    SelectComponent
   ],
   templateUrl: './content.component.html',
   styleUrl: './content.component.scss',
@@ -29,11 +29,16 @@ export class ContentComponent {
 
   private modalService = inject(NgbModal);
   private iotService = inject(IotService);
+  public authService = inject(AuthService);
   projects: Project[] = [];
   allGroups: Group[] = [];
   groups: Group[] = [];
   devices: Device[] = [];
   versions: FirmwareVersion | undefined;
+
+  get isAdmin(): boolean {
+    return this.authService.currentUser()?.role === 'ADMIN';
+  }
 
 
   constructor() {
@@ -65,7 +70,7 @@ export class ContentComponent {
       this.devices = [];
       if (groupId) {
 
-        this.iotService.getDevices(this.nodeForm.get('project')?.value?.value! as UUID, groupId).subscribe({
+        this.iotService.getDevices(this.nodeForm.get('project')?.value?.key! as UUID, groupId).subscribe({
           next: (devices) => {
             this.devices = devices;
           },
@@ -133,8 +138,19 @@ export class ContentComponent {
   }
 
   selectDevice(deviceId: UUID) {
-    const id = deviceId == this.nodeForm.get('device')?.value ? undefined : deviceId;
-    this.nodeForm.get('device')?.setValue(id);
+    this.nodeForm.get('device')?.setValue(deviceId);
+    const device = this.devices.find(d => d.id === deviceId);
+    if (device) {
+      this.openDeviceHistory(device);
+    }
+  }
+
+  openDeviceHistory(device: Device) {
+    const modalRef = this.modalService.open(DeviceHistoryComponent, { size: 'lg' });
+    modalRef.componentInstance.projectId.set(this.nodeForm.get('project')?.value?.key as UUID);
+    modalRef.componentInstance.groupId.set(this.nodeForm.get('group')?.value as UUID);
+    modalRef.componentInstance.deviceId.set(device.id as UUID);
+    modalRef.componentInstance.deviceName.set(device.name);
   }
 
   openProjectForm() {
@@ -162,7 +178,15 @@ export class ContentComponent {
 
     modalRef.result.then((result) => {
       if (result) {
-        console.log('Device created:', result);
+        // Reload devices for the current group after creation
+        const projectId = this.nodeForm.get('project')?.value?.key as UUID;
+        const groupId = this.nodeForm.get('group')?.value as UUID;
+        if (projectId && groupId) {
+          this.iotService.getDevices(projectId, groupId).subscribe({
+            next: (devices) => { this.devices = devices; },
+            error: (err) => console.error(err),
+          });
+        }
       }
     }).catch((err) => {
       console.error('Modal dismissed:', err);
@@ -180,5 +204,29 @@ export class ContentComponent {
     }).catch((err) => {
       console.error('Modal dismissed:', err);
     });
+  }
+
+  openCollaboratorForm() {
+    const modalRef = this.modalService.open(CollaboratorFormComponent);
+    modalRef.componentInstance.projectId = this.nodeForm.get('project')?.value?.key as UUID;
+
+    modalRef.result.then((result) => {
+      if (result) {
+        console.log('Collaborator registered:', result);
+      }
+    }).catch((err) => {
+      // Ignored
+    });
+  }
+
+  downloadBaseModel(type: 'ESP32' | 'ESP32S3') {
+    const filename = type === 'ESP32S3' ? 'OTA-UPDATE-S3.rar' : 'OTA-UPDATE.rar';
+    const url = `${environment.API_URL}/firmware/${filename}`;
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }

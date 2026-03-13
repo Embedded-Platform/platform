@@ -67,6 +67,12 @@ export class RestClientService {
     this.getEvents.get(url)!.next();
   }
 
+  // Call on login/logout to prevent cross-user cache contamination
+  clearCache() {
+    this.cache.clear();
+    this.getEvents.clear();
+  }
+
   get<R>(url: string, options?: any, cacheConfig?: RestCacheConfig) {
 
     if (!this.getEvents.has(url)) {

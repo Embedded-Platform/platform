@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, EventEmitter, inject, Output } from '@angular/core';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IotService } from '../../services/iot/iot.service';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -16,15 +16,16 @@ export class ProjectFormComponent {
     name: new FormControl('', [Validators.required]),
     description: new FormControl(''),
   });
-  activeModal = inject(NgbActiveModal);
+  activeModal = inject(NgbActiveModal, { optional: true });
+  @Output() projectCreated = new EventEmitter<any>();
   sevicesStatus = ServicesStatus;
-  submitStatus: ServicesStatus = ServicesStatus.PROCESS;
+  submitStatus: ServicesStatus = ServicesStatus.IDLE;
   statusMessage: string | null = null;
   onSubmit() {
     if (this.projectForm.valid) {
       const projectRequest = {
         name: this.projectForm.value.name!,
-        description: this.projectForm.value.description,
+        description: this.projectForm.value.description ?? '',
       };
       this.submitStatus = ServicesStatus.PROCESS;
       this.platformService.createProject(projectRequest).subscribe(
@@ -33,8 +34,11 @@ export class ProjectFormComponent {
             console.log('Project created successfully:', response);
             this.statusMessage = `${projectRequest.name} creado correctamente`;
             this.submitStatus = ServicesStatus.SUCCESS;
+            this.projectCreated.emit(response);
             setTimeout(() => {
-              this.activeModal.close(response);
+              if (this.activeModal) {
+                this.activeModal.close(response);
+              }
             }, 1500);
 
           },

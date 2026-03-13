@@ -42,7 +42,7 @@ export class FirmwareUpdateComponent {
   });
   activeModal = inject(NgbActiveModal);
   sevicesStatus = ServicesStatus;
-  submitStatus: ServicesStatus = ServicesStatus.PROCESS;
+  submitStatus: ServicesStatus = ServicesStatus.IDLE;
   statusMessage: string | null = null;
 
   constructor() {

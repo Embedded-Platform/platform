@@ -7,10 +7,12 @@ import { DeviceComponent } from './pages/device/device.component';
 import { GroupComponent } from './pages/group/group.component';
 import { ProjectGuard } from './guards/platform.guard';
 import { HiComponent } from './pages/hi/hi.component';
+import { RegisterComponent } from './pages/register/register.component';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'project', pathMatch: 'full' },
   { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
   {path: 'home', component: HomeComponent,
     canMatch: [authGuard],
     children: [

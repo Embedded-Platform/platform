@@ -1,29 +1,38 @@
 import { Component, inject } from '@angular/core';
 import { AuthService } from '../../services/auth.service';
-import {FormGroup, FormControl, ReactiveFormsModule} from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormGroup, FormControl, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss'
 })
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+
   loginForm = new FormGroup({
-    username: new FormControl(''),
-    password: new FormControl(''),
-  })
-  constructor(){}
+    username: new FormControl('', [Validators.required]),
+    password: new FormControl('', [Validators.required]),
+  });
+
+  errorMessage: string | null = null;
+  isLoading = false;
+
   public auth = () => {
-    console.log(this.loginForm)
+    this.errorMessage = null;
+    this.isLoading = true;
     this.authService.login(
       this.loginForm.get('username')?.value || '',
-      this.loginForm.get('password')?.value || '').subscribe({
+      this.loginForm.get('password')?.value || ''
+    ).subscribe({
       next: () => this.router.navigate(['/project']),
-      error: (err) => console.error(err),
+      error: (err) => {
+        this.errorMessage = err || 'Credenciales inválidas. Intenta de nuevo.';
+        this.isLoading = false;
+      },
     });
   }
 }

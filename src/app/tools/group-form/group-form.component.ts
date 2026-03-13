@@ -18,7 +18,7 @@ export class GroupFormComponent {
   projects: Project[] = [];
   activeModal = inject(NgbActiveModal);
   sevicesStatus = ServicesStatus;
-  submitStatus: ServicesStatus = ServicesStatus.PROCESS;
+  submitStatus: ServicesStatus = ServicesStatus.IDLE;
   statusMessage: string | null = null;
 
   constructor() {
@@ -41,7 +41,7 @@ export class GroupFormComponent {
     if (this.groupForm.valid) {
       const groupRequest = {
         name: this.groupForm.value.name!,
-        description: this.groupForm.value.description,
+        description: this.groupForm.value.description ?? '',
         projectId: this.groupForm.value.project?.key! as UUID
       };
       this.submitStatus = ServicesStatus.PROCESS;

@@ -9,12 +9,14 @@ import {
 } from '../interfaces';
 import { AuthStatus } from '../enums/auth-status.enum';
 import { environment } from '../../environments/environment';
+import { RestClientService } from './rest-client.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private restClient = inject(RestClientService);
   constructor() {}
   private readonly baseUrl =  environment.API_URL;
 
@@ -44,7 +46,10 @@ export class AuthService {
     const body = { username, password };
 
     return this.http.post<LoginResponse>(url, body).pipe(
-      map(({ user, jwt }) => this.setAuthentication(user, jwt)),
+      map(({ user, jwt }) => {
+        this.restClient.clearCache(); // Clear previous user's cache before loading new session
+        return this.setAuthentication(user, jwt);
+      }),
       catchError((err) => throwError(() => err.error.message))
     );
   }
@@ -60,7 +65,31 @@ export class AuthService {
 
     return this.http.post<RegisterResponse>(url, body).pipe(
       map(({ user, jwt }) => this.setAuthentication(user, jwt)),
-      catchError((err) => throwError(() => err.error.message))
+      catchError((err) => {
+        console.error('Register error:', err);
+        return throwError(() => err?.error?.message || 'Error occurred during registration');
+      })
+    );
+  }
+
+  createCollaborator(
+    name: string,
+    email: string,
+    username: string,
+    password: string,
+    projectId: string
+  ): Observable<boolean> {
+    const url = `${this.baseUrl}/auth/create-collaborator`;
+    const body = { name, email, username, password, projectId };
+    const jwt = localStorage.getItem('jwt');
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${jwt}`);
+
+    return this.http.post<any>(url, body, { headers }).pipe(
+      map(() => true),
+      catchError((err) => {
+        console.error('Collaborator error:', err);
+        return throwError(() => err?.error?.message || 'Error occurred during creation');
+      })
     );
   }
 
@@ -92,11 +121,11 @@ export class AuthService {
   }
 
   logout() {
-
     if (typeof localStorage === 'undefined') {
       return;
     }
 
+    this.restClient.clearCache(); // Wipe all cached responses on logout
     localStorage.clear();
     this._currentUser.set(null);
     this._authStatus.set(AuthStatus.notAuthenticated);

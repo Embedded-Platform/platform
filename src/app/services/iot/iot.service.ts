@@ -1,5 +1,5 @@
 import { inject, Injectable } from "@angular/core";
-import { Device, DeviceRequest, FirmwareVersion, Group, GroupRequest, Project} from "../../interfaces/iot.interface";
+import { Device, DeviceRequest, FirmwareVersion, Group, GroupRequest, JobHistoryResponse, Project} from "../../interfaces/iot.interface";
 import { RestClientService } from "../rest-client.service";
 import { RestCacheConfig, UUID } from "../../interfaces/commons.interface";
 import { switchMap, tap } from "rxjs";
@@ -81,6 +81,13 @@ export class IotService {
 
   getFirmwareDeviceVersions(projectId: UUID, groupId: UUID, deviceId: UUID){
     return this.http.get<FirmwareVersion>(`/platform/project/${projectId}/group/${groupId}/device/${deviceId}/firmware/versions`);
+  }
+
+  getJobHistory(projectId: UUID, groupId: UUID, deviceId: UUID, maxResults?: number, nextToken?: string) {
+    let params: any = {};
+    if (maxResults) params.maxResults = maxResults;
+    if (nextToken) params.nextToken = nextToken;
+    return this.http.get<JobHistoryResponse>(`/platform/project/${projectId}/group/${groupId}/device/${deviceId}/jobs`, { params });
   }
 
 }

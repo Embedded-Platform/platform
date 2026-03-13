@@ -3,7 +3,7 @@ import { ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR } from '@angular/f
 import { GenericHash } from '../../interfaces/commons.interface';
 
 @Component({
-  selector: 'select-option',
+  selector: 'app-select',
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

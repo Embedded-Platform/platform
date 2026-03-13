@@ -44,3 +44,16 @@ export interface FirmwareVersion {
   prefix: string;
   maxKeys: number;
 }
+
+export interface JobExecution {
+  jobId: string;
+  status: string;
+  queuedAt: string;
+  startedAt: string;
+  lastUpdatedAt: string;
+}
+
+export interface JobHistoryResponse {
+  executions: JobExecution[];
+  nextToken: string;
+}

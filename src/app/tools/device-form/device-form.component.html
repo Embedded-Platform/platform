@@ -2,11 +2,11 @@
   <form [formGroup]="deviceForm" (ngSubmit)="onSubmit()" class="p-4 rounded shadow-sm bg-white">
     <div class="mb-3">
       <label for="project" class="form-label fw-bold">Proyecto</label>
-      <select-option [options]="projects()" placeholder="Selecciona un proyecto" formControlName="project"></select-option>
+      <app-select [options]="projects()" placeholder="Selecciona un proyecto" formControlName="project"></app-select>
     </div>
     <div class="mb-3">
       <label for="group" class="form-label fw-bold">Grupo</label>
-      <select-option [options]="groups()" placeholder="Selecciona un grupo" formControlName="group"></select-option>
+      <app-select [options]="groups()" placeholder="Selecciona un grupo" formControlName="group"></app-select>
     </div>
     <div class="mb-3">
       <label for="name" class="form-label fw-bold">Nombre del dispositivo</label>
