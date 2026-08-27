@@ -1,70 +1,72 @@
-name: Deploy Angular App to EC2 with NGINX
+name: Deploy Angular App (FrontEnd) to AWS
+
+# Figura 10.16 - Pipeline del FrontEnd.
+# Cambia respecto del original: en vez de SCP+SSH + configurar NGINX en UNA EC2,
+# publica el build como artefacto (dist.zip) en S3 y dispara un Instance Refresh
+# del Auto Scaling Group. Las instancias del ASG instalan NGINX y bajan el zip en
+# su UserData (ver infra/cloudformation/platform.yaml en el repo del backend).
 
 on:
   push:
-    branches: [ platform ]  # O la rama que uses
+    branches: [master, platform]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-frontend
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '22'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
 
-    - name: Install dependencies
-      run: npm install
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Build Angular app
-      run: npm run build --configuration=production
+      - name: Build Angular app (production)
+        run: npx ng build --configuration production
 
-    - name: Copy files to EC2
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        source: "dist/**"
-        target: "/home/${{ secrets.EC2_USER }}/angular-app"
+      - name: Package build
+        run: |
+          cd dist
+          zip -r ../dist.zip .
+          cd ..
 
-    - name: Configure NGINX on EC2
-      uses: appleboy/ssh-action@v1.0.0
-      with:
-        host: ${{ secrets.EC2_HOST }}
-        username: ${{ secrets.EC2_USER }}
-        key: ${{ secrets.EC2_KEY }}
-        script: |
-          # Instalar NGINX si no está
-          if ! command -v nginx > /dev/null; then
-            sudo apt update
-            sudo apt install -y nginx
-          fi
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-          # Crear directorio si no existe
-          sudo mkdir -p /var/www/angular-app
-          sudo cp -r /home/${{ secrets.EC2_USER }}/angular-app/dist/* /var/www/angular-app
+      - name: Upload artifact to S3
+        run: aws s3 cp dist.zip "s3://${{ secrets.ARTIFACTS_BUCKET }}/frontend/dist.zip"
 
-          # Crear archivo de configuración para Angular
-          cat <<EOF | sudo tee /etc/nginx/sites-available/angular-app
-          server {
-              listen 80;
-              server_name _;
+      - name: Trigger rolling deploy (ASG instance refresh)
+        run: |
+          aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name "${{ secrets.FRONTEND_ASG_NAME }}" \
+            --preferences '{"MinHealthyPercentage":100,"InstanceWarmup":120}'
 
-              root /var/www/angular-app/platform/browser;
-              index index.html;
-
-              location / {
-                  try_files \$uri \$uri/ /index.html;
-              }
-          }
-          EOF
-
-          # Activar configuración y reiniciar nginx
-          sudo ln -sf /etc/nginx/sites-available/angular-app /etc/nginx/sites-enabled/angular-app
-          sudo rm -f /etc/nginx/sites-enabled/default
-          sudo nginx -t && sudo systemctl restart nginx
+      - name: Wait for instance refresh to finish
+        run: |
+          for i in $(seq 1 40); do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name "${{ secrets.FRONTEND_ASG_NAME }}" \
+              --query 'InstanceRefreshes[0].Status' --output text)
+            echo "Instance refresh: $STATUS"
+            case "$STATUS" in
+              Successful) exit 0 ;;
+              Failed|Cancelled) exit 1 ;;
+            esac
+            sleep 30
+          done
+          echo "Timeout esperando el instance refresh"; exit 1
